@@ -1,8 +1,8 @@
 # 🏁 Pixel Racer
 
-A retro-style pixelated car racing game built with **Next.js 14**, **React 18**, and the **Web Audio API**.
+A retro-style pixelated car racing game built with **Next.js 15**, **React 19**, and the **Web Audio API**.
 
-![Tech Stack](https://img.shields.io/badge/Next.js-14-black) ![React](https://img.shields.io/badge/React-18-blue) ![Style](https://img.shields.io/badge/Style-Pixel%20Art-ff69b4)
+![Tech Stack](https://img.shields.io/badge/Next.js-15-black) ![React](https://img.shields.io/badge/React-19-blue) ![Style](https://img.shields.io/badge/Style-Pixel%20Art-ff69b4)
 
 ---
 
@@ -108,8 +108,8 @@ Click the **🔊 button** in the bottom-right corner to control sounds.
 
 ## 🎯 Key Technologies
 
-- **Next.js 14** - React framework with App Router
-- **React 18** - UI library with modern hooks
+- **Next.js 15.5.4** - React framework with App Router (latest version)
+- **React 19** - UI library with modern hooks and compiler (latest version)
 - **Web Audio API** - Dynamic sound generation
 - **Canvas API** - 2D game rendering
 - **CSS3** - Pixel art styling with animations
