@@ -4,35 +4,44 @@
  * No external audio files needed!
  */
 
-class SoundManager {
-  constructor() {
-    this.audioContext = null;
-    this.masterGain = null;
-    this.musicGain = null;
-    this.sfxGain = null;
-    this.isInitialized = false;
-    this.isMusicPlaying = false;
-    this.musicOscillators = [];
-    this.musicTimeout = null;
+interface VolumeSettings {
+  master: number;
+  music: number;
+  sfx: number;
+}
 
-    // Volume settings (0.0 to 1.0)
-    this.volumes = {
-      master: 0.5,
-      music: 0.3,
-      sfx: 0.4,
-    };
-  }
+interface MelodyNote {
+  freq: number;
+  duration: number;
+}
+
+class SoundManager {
+  audioContext: AudioContext | null = null;
+  masterGain: GainNode | null = null;
+  musicGain: GainNode | null = null;
+  sfxGain: GainNode | null = null;
+  isInitialized: boolean = false;
+  isMusicPlaying: boolean = false;
+  musicOscillators: OscillatorNode[] = [];
+  musicTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  // Volume settings (0.0 to 1.0)
+  volumes: VolumeSettings = {
+    master: 0.5,
+    music: 0.3,
+    sfx: 0.4,
+  };
 
   /**
    * Initialize the audio context
    * Must be called after user interaction due to browser autoplay policies
    */
-  init() {
+  init(): void {
     if (this.isInitialized) return;
 
     try {
       this.audioContext = new (window.AudioContext ||
-        window.webkitAudioContext)();
+        (window as any).webkitAudioContext)();
 
       // Create gain nodes for volume control
       this.masterGain = this.audioContext.createGain();
@@ -57,8 +66,8 @@ class SoundManager {
   /**
    * Play a retro beep sound for movement (left/right)
    */
-  playMoveSound(direction = "left") {
-    if (!this.isInitialized) return;
+  playMoveSound(direction: "left" | "right" = "left"): void {
+    if (!this.isInitialized || !this.audioContext || !this.sfxGain) return;
 
     const now = this.audioContext.currentTime;
     const oscillator = this.audioContext.createOscillator();
@@ -88,8 +97,8 @@ class SoundManager {
   /**
    * Play a jump sound effect
    */
-  playJumpSound() {
-    if (!this.isInitialized) return;
+  playJumpSound(): void {
+    if (!this.isInitialized || !this.audioContext || !this.sfxGain) return;
 
     const now = this.audioContext.currentTime;
     const oscillator = this.audioContext.createOscillator();
@@ -120,8 +129,8 @@ class SoundManager {
   /**
    * Play a celebration sound for new high score
    */
-  playCelebrationSound() {
-    if (!this.isInitialized) return;
+  playCelebrationSound(): void {
+    if (!this.isInitialized || !this.audioContext || !this.sfxGain) return;
 
     const now = this.audioContext.currentTime;
 
@@ -134,11 +143,11 @@ class SoundManager {
     ];
 
     notes.forEach((note) => {
-      const oscillator = this.audioContext.createOscillator();
-      const gainNode = this.audioContext.createGain();
+      const oscillator = this.audioContext!.createOscillator();
+      const gainNode = this.audioContext!.createGain();
 
       oscillator.connect(gainNode);
-      gainNode.connect(this.sfxGain);
+      gainNode.connect(this.sfxGain!);
 
       oscillator.frequency.value = note.freq;
       oscillator.type = "triangle"; // Warm, pleasant sound
@@ -163,8 +172,8 @@ class SoundManager {
   /**
    * Play a crash/collision sound
    */
-  playCrashSound() {
-    if (!this.isInitialized) return;
+  playCrashSound(): void {
+    if (!this.isInitialized || !this.audioContext || !this.sfxGain) return;
 
     const now = this.audioContext.currentTime;
 
@@ -213,7 +222,7 @@ class SoundManager {
    * Start playing background music
    * Simple retro melody loop
    */
-  startBackgroundMusic() {
+  startBackgroundMusic(): void {
     if (!this.isInitialized || this.isMusicPlaying) return;
 
     this.isMusicPlaying = true;
@@ -223,7 +232,7 @@ class SoundManager {
   /**
    * Stop background music
    */
-  stopBackgroundMusic() {
+  stopBackgroundMusic(): void {
     if (!this.isMusicPlaying) return;
 
     this.isMusicPlaying = false;
@@ -248,11 +257,11 @@ class SoundManager {
   /**
    * Play a simple retro melody loop
    */
-  playMusicLoop() {
-    if (!this.isMusicPlaying) return;
+  playMusicLoop(): void {
+    if (!this.isMusicPlaying || !this.audioContext || !this.musicGain) return;
 
     // Simple melody notes (C major scale pattern)
-    const melody = [
+    const melody: MelodyNote[] = [
       { freq: 523.25, duration: 0.3 }, // C5
       { freq: 659.25, duration: 0.3 }, // E5
       { freq: 783.99, duration: 0.3 }, // G5
@@ -271,11 +280,11 @@ class SoundManager {
     melody.forEach((note, index) => {
       if (!this.isMusicPlaying) return;
 
-      const oscillator = this.audioContext.createOscillator();
-      const gainNode = this.audioContext.createGain();
+      const oscillator = this.audioContext!.createOscillator();
+      const gainNode = this.audioContext!.createGain();
 
       oscillator.connect(gainNode);
-      gainNode.connect(this.musicGain);
+      gainNode.connect(this.musicGain!);
 
       oscillator.frequency.value = note.freq;
       oscillator.type = "square"; // Retro square wave
@@ -321,8 +330,8 @@ class SoundManager {
   /**
    * Set master volume (0.0 to 1.0)
    */
-  setMasterVolume(value) {
-    if (!this.isInitialized) return;
+  setMasterVolume(value: number): void {
+    if (!this.isInitialized || !this.masterGain) return;
     this.volumes.master = Math.max(0, Math.min(1, value));
     this.masterGain.gain.value = this.volumes.master;
   }
@@ -330,8 +339,8 @@ class SoundManager {
   /**
    * Set music volume (0.0 to 1.0)
    */
-  setMusicVolume(value) {
-    if (!this.isInitialized) return;
+  setMusicVolume(value: number): void {
+    if (!this.isInitialized || !this.musicGain) return;
     this.volumes.music = Math.max(0, Math.min(1, value));
     this.musicGain.gain.value = this.volumes.music;
   }
@@ -339,8 +348,8 @@ class SoundManager {
   /**
    * Set sound effects volume (0.0 to 1.0)
    */
-  setSfxVolume(value) {
-    if (!this.isInitialized) return;
+  setSfxVolume(value: number): void {
+    if (!this.isInitialized || !this.sfxGain) return;
     this.volumes.sfx = Math.max(0, Math.min(1, value));
     this.sfxGain.gain.value = this.volumes.sfx;
   }
@@ -348,7 +357,7 @@ class SoundManager {
   /**
    * Toggle background music on/off
    */
-  toggleMusic() {
+  toggleMusic(): boolean {
     if (this.isMusicPlaying) {
       this.stopBackgroundMusic();
     } else {
@@ -360,7 +369,7 @@ class SoundManager {
   /**
    * Clean up and release resources
    */
-  cleanup() {
+  cleanup(): void {
     this.stopBackgroundMusic();
 
     if (this.audioContext) {

@@ -1,6 +1,16 @@
 "use client";
 
-export default function GameOverScreen({ isVisible, finalScore, onRestart }) {
+interface GameOverScreenProps {
+  isVisible: boolean;
+  finalScore: number;
+  onRestart: () => void;
+}
+
+export default function GameOverScreen({
+  isVisible,
+  finalScore,
+  onRestart,
+}: GameOverScreenProps) {
   if (!isVisible) return null;
 
   return (

@@ -5,10 +5,17 @@
 
 import { CONFIG } from "./gameConfig";
 
+interface Bounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 /**
  * Check collision between two rectangles (AABB collision)
  */
-export function checkCollision(rect1, rect2) {
+export function checkCollision(rect1: Bounds, rect2: Bounds): boolean {
   return (
     rect1.x < rect2.x + rect2.width &&
     rect1.x + rect1.width > rect2.x &&
@@ -20,7 +27,11 @@ export function checkCollision(rect1, rect2) {
 /**
  * Draw the road with animated lane markers
  */
-export function drawRoad(ctx, canvas, roadOffset) {
+export function drawRoad(
+  ctx: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  roadOffset: number
+): void {
   const roadStartX = (canvas.width - CONFIG.roadLanes * CONFIG.laneWidth) / 2;
   const roadWidth = CONFIG.roadLanes * CONFIG.laneWidth;
 
@@ -55,7 +66,10 @@ export function drawRoad(ctx, canvas, roadOffset) {
 /**
  * Draw speed indicator bar
  */
-export function drawSpeedIndicator(ctx, speedMultiplier) {
+export function drawSpeedIndicator(
+  ctx: CanvasRenderingContext2D,
+  speedMultiplier: number
+): void {
   const speedPercent = Math.floor(
     ((speedMultiplier - 1) / (CONFIG.maxSpeedMultiplier - 1)) * 100
   );
@@ -76,7 +90,7 @@ export function drawSpeedIndicator(ctx, speedMultiplier) {
 
   // Bar fill (color changes with speed)
   const barWidth = speedPercent;
-  let barColor;
+  let barColor: string;
   if (speedPercent < 33) {
     barColor = "#00ff88"; // Green
   } else if (speedPercent < 66) {
@@ -96,7 +110,10 @@ export function drawSpeedIndicator(ctx, speedMultiplier) {
 /**
  * Draw start screen overlay
  */
-export function drawStartScreen(ctx, canvas) {
+export function drawStartScreen(
+  ctx: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement
+): void {
   // Semi-transparent overlay
   ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);

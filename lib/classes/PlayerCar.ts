@@ -6,8 +6,29 @@
 import soundManager from "@/lib/soundManager";
 import { CONFIG } from "@/lib/gameConfig";
 
+interface Bounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export class PlayerCar {
-  constructor(canvas) {
+  canvas: HTMLCanvasElement;
+  width: number;
+  height: number;
+  lane: number;
+  x: number;
+  baseY: number;
+  y: number;
+  targetX: number;
+  speed: number;
+  isJumping: boolean;
+  jumpVelocity: number;
+  jumpPower: number;
+  gravity: number;
+
+  constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.width = 40;
     this.height = 60;
@@ -23,7 +44,7 @@ export class PlayerCar {
     this.gravity = 0.8; // Gravity pull
   }
 
-  getLaneX(lane) {
+  getLaneX(lane: number): number {
     const roadStartX =
       (this.canvas.width - CONFIG.roadLanes * CONFIG.laneWidth) / 2;
     return (
@@ -31,7 +52,7 @@ export class PlayerCar {
     );
   }
 
-  moveLeft() {
+  moveLeft(): void {
     if (this.lane > 0) {
       this.lane--;
       this.targetX = this.getLaneX(this.lane);
@@ -39,7 +60,7 @@ export class PlayerCar {
     }
   }
 
-  moveRight() {
+  moveRight(): void {
     if (this.lane < CONFIG.roadLanes - 1) {
       this.lane++;
       this.targetX = this.getLaneX(this.lane);
@@ -47,7 +68,7 @@ export class PlayerCar {
     }
   }
 
-  jump() {
+  jump(): void {
     if (!this.isJumping) {
       this.isJumping = true;
       this.jumpVelocity = this.jumpPower;
@@ -55,7 +76,7 @@ export class PlayerCar {
     }
   }
 
-  update() {
+  update(): void {
     // Smooth horizontal movement
     if (this.x < this.targetX) {
       this.x += this.speed;
@@ -79,7 +100,7 @@ export class PlayerCar {
     }
   }
 
-  draw(ctx, color) {
+  draw(ctx: CanvasRenderingContext2D, color: string): void {
     // Draw shadow when jumping
     if (this.isJumping) {
       const shadowY = this.baseY + this.height - 5;
@@ -118,7 +139,7 @@ export class PlayerCar {
     ctx.fillRect(this.x + this.width - 18, this.y + this.height - 8, 10, 6);
   }
 
-  adjustBrightness(hex, amount) {
+  adjustBrightness(hex: string, amount: number): string {
     const r = parseInt(hex.slice(1, 3), 16);
     const g = parseInt(hex.slice(3, 5), 16);
     const b = parseInt(hex.slice(5, 7), 16);
@@ -132,7 +153,7 @@ export class PlayerCar {
       .padStart(2, "0")}${newB.toString(16).padStart(2, "0")}`;
   }
 
-  getBounds() {
+  getBounds(): Bounds {
     return {
       x: this.x,
       y: this.y,

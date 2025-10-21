@@ -2,8 +2,27 @@
 
 import { useEffect, useState } from "react";
 
-export default function CelebrationEffect({ isActive, onComplete }) {
-  const [flowers, setFlowers] = useState([]);
+interface Flower {
+  id: number;
+  emoji: string;
+  left: number;
+  animationDelay: number;
+  duration: number;
+  size: number;
+  rotation: number;
+  drift: number;
+}
+
+interface CelebrationEffectProps {
+  isActive: boolean;
+  onComplete?: () => void;
+}
+
+export default function CelebrationEffect({
+  isActive,
+  onComplete,
+}: CelebrationEffectProps) {
+  const [flowers, setFlowers] = useState<Flower[]>([]);
 
   useEffect(() => {
     if (!isActive) {
@@ -12,7 +31,7 @@ export default function CelebrationEffect({ isActive, onComplete }) {
     }
 
     // Create 30 flower particles
-    const newFlowers = [];
+    const newFlowers: Flower[] = [];
     for (let i = 0; i < 30; i++) {
       newFlowers.push({
         id: i,
@@ -58,6 +77,7 @@ export default function CelebrationEffect({ isActive, onComplete }) {
             animationDelay: `${flower.animationDelay}s`,
             animationDuration: `${flower.duration}s`,
             fontSize: `${flower.size}px`,
+            // @ts-ignore - CSS custom properties
             "--drift": `${flower.drift}px`,
             "--rotation": `${flower.rotation}deg`,
           }}
@@ -73,6 +93,7 @@ export default function CelebrationEffect({ isActive, onComplete }) {
             key={i}
             className="confetti"
             style={{
+              // @ts-ignore - CSS custom properties
               "--angle": `${(i * 360) / 20}deg`,
               "--delay": `${i * 0.05}s`,
               background: `hsl(${(i * 360) / 20}, 100%, 60%)`,

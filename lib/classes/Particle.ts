@@ -4,7 +4,16 @@
  */
 
 export class Particle {
-  constructor(x, y) {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number;
+  maxLife: number;
+  size: number;
+  color: string;
+
+  constructor(x: number, y: number) {
     this.x = x;
     this.y = y;
     this.vx = (Math.random() - 0.5) * 4; // Random horizontal velocity
@@ -15,13 +24,13 @@ export class Particle {
     this.color = `hsl(${Math.random() * 60}, 100%, 50%)`; // Random warm color
   }
 
-  update() {
+  update(): void {
     this.x += this.vx;
     this.y += this.vy;
     this.life--;
   }
 
-  draw(ctx) {
+  draw(ctx: CanvasRenderingContext2D): void {
     const alpha = this.life / this.maxLife;
     ctx.fillStyle = this.color;
     ctx.globalAlpha = alpha;
@@ -29,7 +38,7 @@ export class Particle {
     ctx.globalAlpha = 1;
   }
 
-  isDead() {
+  isDead(): boolean {
     return this.life <= 0;
   }
 }

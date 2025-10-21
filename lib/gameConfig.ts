@@ -37,4 +37,4 @@ export const CONFIG = {
     obstacle2: "#ff8800",
     obstacle3: "#9900ff",
   },
-};
+} as const;

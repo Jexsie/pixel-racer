@@ -17,27 +17,45 @@ import GameOverScreen from "./GameOverScreen";
 import MobileControls from "./MobileControls";
 import CelebrationEffect from "./CelebrationEffect";
 
-export default function GameCanvas({ carColor }) {
-  const canvasRef = useRef(null);
+interface GameCanvasProps {
+  carColor: string;
+}
+
+interface GameState {
+  isPlaying: boolean;
+  gameStarted: boolean;
+  score: number;
+  highScore: number;
+  roadOffset: number;
+  obstacles: Obstacle[];
+  particles: Particle[];
+  speedMultiplier: number;
+  currentSpawnRate: number;
+}
+
+export default function GameCanvas({ carColor }: GameCanvasProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [score, setScore] = useState(0);
   const [isGameOver, setIsGameOver] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
   const [showCelebration, setShowCelebration] = useState(false);
   const [highScore, setHighScore] = useState(0);
-  const gameStateRef = useRef(null);
-  const playerRef = useRef(null);
-  const animationFrameRef = useRef(null);
+  const gameStateRef = useRef<GameState | null>(null);
+  const playerRef = useRef<PlayerCar | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
     canvas.width = CONFIG.canvasWidth;
     canvas.height = CONFIG.canvasHeight;
 
     // Initialize game state
-    const gameState = {
+    const gameState: GameState = {
       isPlaying: false,
       gameStarted: false,
       score: 0,
@@ -96,7 +114,13 @@ export default function GameCanvas({ carColor }) {
     const spawnObstacle = () => {
       if (Math.random() < gameState.currentSpawnRate) {
         const lane = Math.floor(Math.random() * CONFIG.roadLanes);
-        const types = ["car", "car", "car", "barrier", "oil"];
+        const types: Array<"car" | "barrier" | "oil"> = [
+          "car",
+          "car",
+          "car",
+          "barrier",
+          "oil",
+        ];
         const type = types[Math.floor(Math.random() * types.length)];
 
         // Check if obstacle too close in this lane
@@ -205,7 +229,7 @@ export default function GameCanvas({ carColor }) {
       if (isNewHighScore) {
         // New high score achieved!
         gameState.highScore = currentScore;
-        localStorage.setItem("pixelRacerHighScore", currentScore);
+        localStorage.setItem("pixelRacerHighScore", currentScore.toString());
         setHighScore(currentScore);
 
         // Show celebration effect
@@ -265,7 +289,7 @@ export default function GameCanvas({ carColor }) {
     };
 
     // Keyboard event handler
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (gameState.isPlaying) {
         if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
           player.moveLeft();

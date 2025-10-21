@@ -5,8 +5,32 @@
 
 import { CONFIG } from "@/lib/gameConfig";
 
+interface Bounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export type ObstacleType = "car" | "barrier" | "oil";
+
 export class Obstacle {
-  constructor(canvas, lane, type, speedMultiplier = 1.0) {
+  canvas: HTMLCanvasElement;
+  lane: number;
+  type: ObstacleType;
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+  speed: number;
+  passed: boolean;
+
+  constructor(
+    canvas: HTMLCanvasElement,
+    lane: number,
+    type: ObstacleType,
+    speedMultiplier: number = 1.0
+  ) {
     this.canvas = canvas;
     this.lane = lane;
     this.type = type; // 'car', 'barrier', or 'oil'
@@ -18,7 +42,7 @@ export class Obstacle {
     this.passed = false; // For score tracking
   }
 
-  getLaneX(lane) {
+  getLaneX(lane: number): number {
     const roadStartX =
       (this.canvas.width - CONFIG.roadLanes * CONFIG.laneWidth) / 2;
     return (
@@ -26,11 +50,11 @@ export class Obstacle {
     );
   }
 
-  update() {
+  update(): void {
     this.y += this.speed;
   }
 
-  draw(ctx) {
+  draw(ctx: CanvasRenderingContext2D): void {
     if (this.type === "car") {
       // Enemy car - color based on lane
       const color =
@@ -81,7 +105,7 @@ export class Obstacle {
     }
   }
 
-  getBounds() {
+  getBounds(): Bounds {
     return {
       x: this.x,
       y: this.y,
@@ -90,7 +114,7 @@ export class Obstacle {
     };
   }
 
-  isOffScreen() {
+  isOffScreen(): boolean {
     return this.y > this.canvas.height;
   }
 }

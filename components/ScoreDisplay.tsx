@@ -1,6 +1,11 @@
 "use client";
 
-export default function ScoreDisplay({ score, highScore }) {
+interface ScoreDisplayProps {
+  score: number;
+  highScore: number;
+}
+
+export default function ScoreDisplay({ score, highScore }: ScoreDisplayProps) {
   return (
     <div className="score-display">
       <div className="score-row">
