@@ -16,6 +16,10 @@ import ScoreDisplay from "./ScoreDisplay";
 import GameOverScreen from "./GameOverScreen";
 import MobileControls from "./MobileControls";
 import CelebrationEffect from "./CelebrationEffect";
+import { useWalletInterface } from "@/services/wallets/useWalletInterface";
+import { mintNftReward } from "@/lib/api/nft";
+import { submitScore, getLeaderboard } from "@/lib/api/leaderboard";
+import { AccountId } from "@hashgraph/sdk";
 
 interface GameCanvasProps {
   carColor: string;
@@ -34,15 +38,22 @@ interface GameState {
 }
 
 export default function GameCanvas({ carColor }: GameCanvasProps) {
+  const { accountId } = useWalletInterface();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [score, setScore] = useState(0);
   const [isGameOver, setIsGameOver] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
   const [showCelebration, setShowCelebration] = useState(false);
   const [highScore, setHighScore] = useState(0);
+  const [mintingNft, setMintingNft] = useState(false);
   const gameStateRef = useRef<GameState | null>(null);
   const playerRef = useRef<PlayerCar | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const accountIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    accountIdRef.current = accountId;
+  }, [accountId]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -217,7 +228,7 @@ export default function GameCanvas({ carColor }: GameCanvasProps) {
     };
 
     // Game over handler
-    const handleGameOver = () => {
+    const handleGameOver = async () => {
       gameState.isPlaying = false;
 
       // Stop background music
@@ -238,7 +249,136 @@ export default function GameCanvas({ carColor }: GameCanvasProps) {
         // Play celebration sound
         soundManager.playCelebrationSound();
 
-        console.log(`🎉 NEW HIGH SCORE: ${currentScore}!`);
+        console.log(`NEW HIGH SCORE: ${currentScore}!`);
+
+        // Get current accountId from ref (to handle wallet connections during gameplay)
+        const currentAccountId = accountIdRef.current;
+        console.log("Current accountId:", currentAccountId);
+
+        // Process rewards if wallet is connected
+        if (currentAccountId) {
+          const evmAddress =
+            AccountId.fromString(currentAccountId).toEvmAddress();
+          setMintingNft(true);
+
+          try {
+            // STEP 1: Mint NFT reward FIRST (always happens on new high score)
+            console.log(`Step 1: Minting NFT reward for ${evmAddress}...`);
+            const mintResult = await mintNftReward(evmAddress);
+
+            if (mintResult.success) {
+              console.log(
+                `NFT Minted! Serial Number: ${mintResult.serialNumber}`
+              );
+            } else {
+              console.error(`NFT Minting failed: ${mintResult.error}`);
+            }
+
+            // STEP 2: Check if score qualifies for top 5 leaderboard
+            console.log(`Step 2: Checking if score qualifies for top 5...`);
+            const leaderboardCheck = await getLeaderboard();
+
+            let shouldSubmitToLeaderboard = false;
+            let leaderboardResult = null;
+
+            if (leaderboardCheck.success && leaderboardCheck.leaderboard) {
+              // If leaderboard has less than 5 entries, always submit
+              if (leaderboardCheck.leaderboard.length < 5) {
+                shouldSubmitToLeaderboard = true;
+                console.log(
+                  `Leaderboard has ${leaderboardCheck.leaderboard.length}/5 entries - submitting score`
+                );
+              } else {
+                // Check if score is better than 5th place
+                const fifthPlace = leaderboardCheck.leaderboard[4];
+                if (currentScore > fifthPlace.score) {
+                  shouldSubmitToLeaderboard = true;
+                  console.log(
+                    `Score ${currentScore} beats 5th place (${fifthPlace.score}) - qualifying for leaderboard!`
+                  );
+                } else {
+                  console.log(
+                    `Score ${currentScore} doesn't beat top 5 (5th: ${fifthPlace.score}) - leaderboard not updated`
+                  );
+                }
+              }
+            } else {
+              // If can't fetch leaderboard, submit anyway
+              shouldSubmitToLeaderboard = true;
+              console.log(`Could not fetch leaderboard - submitting anyway`);
+            }
+
+            // STEP 3: Submit to leaderboard only if qualified for top 5
+            if (shouldSubmitToLeaderboard) {
+              console.log(` Step 3: Submitting score to leaderboard...`);
+              leaderboardResult = await submitScore(
+                "PLAYER", // You can get this from user input or wallet
+                currentScore,
+                currentAccountId
+              );
+
+              if (leaderboardResult.success) {
+                console.log(
+                  `Score submitted! Rank: #${leaderboardResult.rank}`
+                );
+              }
+            }
+
+            // STEP 4: Show notification based on results
+            setTimeout(() => {
+              let message = "";
+
+              if (mintResult.success && leaderboardResult?.success) {
+                // Both NFT and leaderboard success
+                message = leaderboardResult.isTop5
+                  ? `AMAZING!\n\n` +
+                    `New High Score: ${currentScore}\n` +
+                    `Leaderboard Rank: #${leaderboardResult.rank} 🏆\n` +
+                    `NFT Reward: Serial #${mintResult.serialNumber}\n\n` +
+                    `You made the TOP 5! Check your wallet for your reward NFT!`
+                  : `Congratulations!\n\n` +
+                    `New High Score: ${currentScore}\n` +
+                    `Leaderboard Rank: #${leaderboardResult.rank}\n` +
+                    `NFT Reward: Serial #${mintResult.serialNumber}\n\n` +
+                    `Check your wallet for your new NFT!`;
+              } else if (mintResult.success && !shouldSubmitToLeaderboard) {
+                // NFT success but didn't qualify for top 5
+                message =
+                  ` New High Score!\n\n` +
+                  `Score: ${currentScore}\n` +
+                  `NFT Reward: Serial #${mintResult.serialNumber}\n\n` +
+                  `NFT minted to your wallet!\n` +
+                  `(Score didn't qualify for top 5 leaderboard)`;
+              } else if (mintResult.success) {
+                // NFT success only
+                message =
+                  ` Congratulations!\n\n` +
+                  `New High Score: ${currentScore}\n` +
+                  `NFT Reward: Serial #${mintResult.serialNumber}\n\n` +
+                  `Check your wallet for your new NFT!`;
+              } else if (leaderboardResult?.success) {
+                // Leaderboard success but NFT failed
+                message =
+                  ` New High Score: ${currentScore}\n` +
+                  `Rank: #${leaderboardResult.rank}\n\n` +
+                  `${leaderboardResult.message}\n` +
+                  `(NFT minting failed - check console)`;
+              } else {
+                // Both failed or only NFT failed
+                message =
+                  ` New High Score: ${currentScore}!\n\n` +
+                  `Rewards processing encountered issues.\n` +
+                  `Check console for details.`;
+              }
+
+              alert(message);
+            }, 1000);
+          } catch (error) {
+            console.error("Error processing high score rewards:", error);
+          } finally {
+            setMintingNft(false);
+          }
+        }
       }
 
       setFinalScore(currentScore);
@@ -388,6 +528,35 @@ export default function GameCanvas({ carColor }: GameCanvasProps) {
         isActive={showCelebration}
         onComplete={handleCelebrationComplete}
       />
+
+      {/* NFT Minting Indicator */}
+      {mintingNft && (
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            background: "rgba(0, 0, 0, 0.9)",
+            border: "3px solid #00ff88",
+            padding: "30px",
+            borderRadius: "8px",
+            textAlign: "center",
+            zIndex: 2000,
+          }}
+        >
+          <div
+            className="loading-spinner"
+            style={{ margin: "0 auto 15px" }}
+          ></div>
+          <p style={{ color: "#00ff88", fontSize: "18px", fontWeight: "bold" }}>
+            🎁 Processing Rewards...
+          </p>
+          <p style={{ color: "#ccc", fontSize: "14px", marginTop: "10px" }}>
+            Minting NFT reward & checking leaderboard!
+          </p>
+        </div>
+      )}
     </div>
   );
 }

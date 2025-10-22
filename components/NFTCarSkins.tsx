@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useUserNfts } from "@/hooks/useUserNfts";
 import { useWalletInterface } from "@/services/wallets/useWalletInterface";
+import CarPreview from "./CarPreview";
 
 interface NFTCarSkinsProps {
   selectedColor: string;
@@ -17,7 +18,6 @@ export default function NFTCarSkins({
   const { nfts: nftSkins, loading } = useUserNfts();
 
   useEffect(() => {
-    // Load saved car color from localStorage
     const savedColor = localStorage.getItem("pixelRacerCarColor");
     if (savedColor) {
       onColorChange(savedColor);
@@ -31,24 +31,32 @@ export default function NFTCarSkins({
   ) => {
     if (isLocked) {
       alert(
-        "🔒 This car skin is locked!\n\nConnect your wallet and own the corresponding NFT to unlock exclusive car skins."
+        "This car skin is locked!\n\nConnect your wallet and own the corresponding NFT to unlock exclusive car skins."
       );
       return;
     }
 
     onColorChange(color);
     localStorage.setItem("pixelRacerCarColor", color);
-    console.log(`🎨 Car skin changed to: ${name} (${color})`);
+    console.log(`Car skin changed to: ${name} (${color})`);
   };
 
   return (
     <aside className="right-sidebar">
       <div className="sidebar-panel">
-        <h2 className="panel-title">🎨 CAR SKINS</h2>
+        <h2 className="panel-title">CAR SKINS</h2>
         <div className="panel-content">
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginBottom: 15,
+            }}
+          >
+            <CarPreview color={selectedColor} />
+          </div>
           {!accountId ? (
             <div className="nft-empty-state">
-              <div className="nft-empty-icon">🔒</div>
               <p className="nft-empty-text">
                 <strong>Connect Your Wallet</strong>
               </p>
@@ -75,7 +83,7 @@ export default function NFTCarSkins({
           ) : (
             <>
               <p className="nft-description">
-                ✅ {nftSkins.length} NFT skin{nftSkins.length > 1 ? "s" : ""}{" "}
+                {nftSkins.length} NFT skin{nftSkins.length > 1 ? "s" : ""}{" "}
                 found!
               </p>
 
@@ -109,7 +117,6 @@ export default function NFTCarSkins({
                           src={nftSkin.metadataJson?.image}
                           alt={nftSkin.metadataJson?.name || ""}
                           onError={(e) => {
-                            // Fallback to solid color if image fails to load
                             const target = e.target as HTMLImageElement;
                             target.style.display = "none";
                             if (target.parentElement) {
@@ -146,7 +153,7 @@ export default function NFTCarSkins({
 
               <div className="nft-notice">
                 <p>
-                  ✅ <strong>NFT Skins Active!</strong> Colors extracted from
+                  <strong>NFT Skins Active!</strong> Colors extracted from
                   &apos;background&apos; metadata property.
                 </p>
               </div>
