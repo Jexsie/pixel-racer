@@ -1214,7 +1214,6 @@ body {
   }
 }
 
-
 /* ==================== NFT SKINS ENHANCEMENTS ==================== */
 .nft-image-preview {
   overflow: hidden;
@@ -1259,7 +1258,7 @@ body {
 .nft-slot.nft-skin.active {
   border-color: #00ff88;
   box-shadow: 0 0 20px rgba(0, 255, 136, 0.8),
-              inset 0 0 20px rgba(0, 255, 136, 0.2);
+    inset 0 0 20px rgba(0, 255, 136, 0.2);
 }
 
 .nft-serial {

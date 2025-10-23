@@ -20,6 +20,7 @@ import { useWalletInterface } from "@/services/wallets/useWalletInterface";
 import { mintNftReward } from "@/lib/api/nft";
 import { submitScore, getLeaderboard } from "@/lib/api/leaderboard";
 import { AccountId } from "@hashgraph/sdk";
+import { mutate } from "swr";
 
 interface GameCanvasProps {
   carColor: string;
@@ -267,6 +268,8 @@ export default function GameCanvas({ carColor }: GameCanvasProps) {
             const mintResult = await mintNftReward(evmAddress);
 
             if (mintResult.success) {
+              mutate(`nfts-${currentAccountId}`);
+
               console.log(
                 `NFT Minted! Serial Number: ${mintResult.serialNumber}`
               );

@@ -1,8 +1,13 @@
 "use client";
 
 import { ReactNode } from "react";
-import { AllWalletsProvider } from "@/services/wallets/AllWalletsProvider";
+import { AllWalletsProvider } from "@/providers/AllWalletsProvider";
+import { SWRProvider } from "../providers/SWRProvider";
 
 export function Providers({ children }: { children: ReactNode }) {
-  return <AllWalletsProvider>{children}</AllWalletsProvider>;
+  return (
+    <SWRProvider>
+      <AllWalletsProvider>{children}</AllWalletsProvider>
+    </SWRProvider>
+  );
 }
