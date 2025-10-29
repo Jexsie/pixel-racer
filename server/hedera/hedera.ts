@@ -85,7 +85,9 @@ export async function mintNft(receiverAddress: string) {
 }
 
 async function getNewCID() {
-  const response = await fetch(`${process.env.CID_SERVICE}/api/cid`);
+  const response = await fetch(
+    `${process.env.CID_SERVICE}/api/cid?game=pixel-racer`
+  );
   if (!response.ok) {
     throw new Error(`Failed to fetch new CID: ${response.statusText}`);
   }
